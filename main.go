@@ -9,9 +9,11 @@ import (
 )
 
 func main() {
-	project := flag.String("project", "", "The Google Cloud Platform project ID. Required.")
+	project := flag.String("project", "", "The Google Cloud Platform project ID. required.")
+	cmd := flag.String("cmd", "", "cmd is required. cmd is encrypt or decrypt")
+	text := flag.String("text", "", "text is required.")
 	flag.Parse()
-	for _, f := range []string{"project"} {
+	for _, f := range []string{"project", "cmd", "text"} {
 		if flag.Lookup(f).Value.String() == "" {
 			log.Fatalf("The %s flag is required.", f)
 		}
@@ -31,18 +33,26 @@ func main() {
 		KeyName:    "sample-key",
 	}
 
-	rct, rk, err := s.Encrypt(k, "Hello World !")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	switch *cmd {
+	case "encrypt":
+		{
+			rct, rk, err := s.Encrypt(k, *text)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			fmt.Printf("CipherText=%s, CryptoKey=%s\n", rct, rk)
+		}
+	case "decrypt":
+		{
+			pt, err := s.Decrypt(k, *text)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			fmt.Printf("PlainText=%s\n", pt)
+		}
+	default:
+		fmt.Println("The cmd flog is encrypt or decrypt")
 	}
-
-	fmt.Printf("CipherText=%s, CryptoKey=%s\n", rct, rk)
-
-	pt, err := s.Decrypt(k, rct)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	fmt.Printf("PlainText=%s\n", pt)
 }
